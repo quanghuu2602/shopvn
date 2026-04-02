@@ -1,0 +1,62 @@
+﻿@model SHOPVN.Controllers.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="page-sm">
+    <div class="auth-card">
+
+        <div class="auth-logo">Shop<em>VN</em></div>
+        <div class="auth-sub">Tạo tài khoản miễn phí</div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                @Html.ValidationSummary(false)
+            </div>
+        }
+
+        <form asp-action="Register" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Họ</label>
+                    <input asp-for="FirstName" class="form-control" placeholder="Nguyễn" />
+                    <span asp-validation-for="FirstName" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tên</label>
+                    <input asp-for="LastName" class="form-control" placeholder="Văn A" />
+                    <span asp-validation-for="LastName" class="form-error"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" placeholder="ban@email.com" />
+                <span asp-validation-for="Email" class="form-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Số điện thoại <span style="color:var(--ink3)">(tuỳ chọn)</span></label>
+                <input asp-for="Phone" class="form-control" placeholder="0901 234 567" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Mật khẩu</label>
+                <input asp-for="Password" class="form-control" placeholder="Ít nhất 6 ký tự" />
+                <span asp-validation-for="Password" class="form-error"></span>
+                <div class="form-hint">Bao gồm chữ và số để bảo mật hơn</div>
+            </div>
+
+            <button type="submit" class="btn-full">Tạo tài khoản</button>
+        </form>
+
+        <div class="auth-switch">
+            Đã có tài khoản?
+            <a asp-action="Login">Đăng nhập</a>
+        </div>
+
+    </div>
+</div>

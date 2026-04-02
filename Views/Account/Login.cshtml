@@ -1,0 +1,52 @@
+﻿@model SHOPVN.Controllers.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="page-sm">
+    <div class="auth-card">
+
+        <div class="auth-logo">Shop<em>VN</em></div>
+        <div class="auth-sub">Chào mừng trở lại!</div>
+
+        @* Hiện lỗi nếu có *@
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                @Html.ValidationSummary(false)
+            </div>
+        }
+
+        <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" placeholder="ban@email.com" />
+                <span asp-validation-for="Email" class="form-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Mật khẩu</label>
+                <input asp-for="Password" class="form-control" placeholder="••••••••" />
+                <span asp-validation-for="Password" class="form-error"></span>
+            </div>
+
+            <div class="form-group" style="display:flex;align-items:center;gap:8px">
+                <input asp-for="RememberMe" type="checkbox" id="remember" />
+                <label for="remember" style="font-size:14px;color:var(--ink2);cursor:pointer">
+                    Ghi nhớ đăng nhập
+                </label>
+            </div>
+
+            <button type="submit" class="btn-full">Đăng nhập</button>
+        </form>
+
+        <div class="auth-switch">
+            Chưa có tài khoản?
+            <a asp-action="Register">Đăng ký ngay</a>
+        </div>
+
+    </div>
+</div>

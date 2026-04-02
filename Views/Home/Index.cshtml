@@ -1,0 +1,125 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<div class="page">
+
+    <!-- HERO -->
+    <div class="hero">
+        <div>
+            <div class="hero-badge">✦ Bộ sưu tập mới 2025</div>
+            <h1>Mua sắm<br><em>thông minh</em><br>hơn mỗi ngày</h1>
+            <p>Hàng ngàn sản phẩm chính hãng, giá tốt nhất. Giao hàng nhanh toàn quốc.</p>
+            <div class="hero-actions">
+                <a asp-controller="Product" asp-action="Index" class="btn-accent">Khám phá ngay</a>
+                <a href="#flash-sale" class="btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.3)">Xem Flash Sale →</a>
+            </div>
+        </div>
+        <div class="hero-side">
+            <div class="mini-row"><span class="mini-icon">👟</span><span class="mini-name">Nike Air Max 270</span><span class="mini-price">1.290.000đ</span></div>
+            <div class="mini-row"><span class="mini-icon">🎧</span><span class="mini-name">Sony WH-1000XM5</span><span class="mini-price">7.490.000đ</span></div>
+            <div class="mini-row"><span class="mini-icon">📱</span><span class="mini-name">iPhone 15 Pro Max</span><span class="mini-price">34.990.000đ</span></div>
+        </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="section-hd">
+        <h2>Danh mục</h2>
+        <a asp-controller="Product" asp-action="Index" class="see-all">Xem tất cả →</a>
+    </div>
+    <div class="categories">
+        @foreach (var cat in ViewBag.Categories ?? new List<dynamic>())
+        {
+            <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@cat.Id" class="cat-card">
+                <div class="cat-icon">@cat.Icon</div>
+                <div class="cat-name">@cat.Name</div>
+            </a>
+        }
+    </div>
+
+    <!-- FLASH SALE -->
+    @if (ViewBag.FlashProducts != null)
+    {
+        <div class="flash-section" id="flash-sale">
+            <div class="flash-grid">
+                @foreach (var p in ViewBag.FlashProducts)
+                {
+                    <a asp-controller="Product" asp-action="Detail" asp-route-id="@p.Id" class="flash-card">
+                        <div class="flash-icon">@p.ImageEmoji</div>
+                        <div class="flash-name">@p.Name</div>
+                        <div>
+                            <span class="flash-price">@p.Price.ToString("N0")đ</span>
+
+                            @* FIX: bỏ .Value *@
+                            @if (p.OriginalPrice != null)
+                            {
+                                <span class="flash-old">@p.OriginalPrice.ToString("N0")đ</span>
+                            }
+                        </div>
+
+                        <div class="flash-bar">
+                            <div class="flash-fill"
+                                 style="width:@(p.FlashSaleTotal > 0 ? p.FlashSaleSold * 100 / p.FlashSaleTotal : 0)%">
+                            </div>
+                        </div>
+                        <div class="flash-sold">Đã bán @p.FlashSaleSold%</div>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- SẢN PHẨM NỔI BẬT -->
+    <div class="section-hd">
+        <h2>Sản phẩm nổi bật</h2>
+        <a asp-controller="Product" asp-action="Index" class="see-all">Xem tất cả →</a>
+    </div>
+
+    <div class="products-grid">
+        @foreach (var p in ViewBag.FeaturedProducts ?? new List<dynamic>())
+        {
+            <div class="product-card">
+                <a asp-controller="Product" asp-action="Detail" asp-route-id="@p.Id">
+                    <div class="pc-img">
+                        @if (!string.IsNullOrEmpty(p.Badge))
+                        {
+                            <span class="pc-badge @p.Badge">
+                                @(p.Badge == "new" ? "Mới" : p.Badge == "hot" ? "Hot" : "Sale")
+                            </span>
+                        }
+                        @p.ImageEmoji
+                    </div>
+
+                    <div class="pc-info">
+                        <div class="pc-brand">@p.Brand</div>
+                        <div class="pc-name">@p.Name</div>
+
+                        <div class="pc-footer">
+                            <div>
+                                <span class="pc-price">@p.Price.ToString("N0")đ</span>
+
+                                @* FIX: bỏ .Value *@
+                                @if (p.OriginalPrice != null)
+                                {
+                                    <span class="pc-old">@p.OriginalPrice.ToString("N0")đ</span>
+                                }
+                            </div>
+
+                            <button class="pc-add btn-add-cart" data-id="@p.Id">
+                                <svg viewBox="0 0 24 24">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+}

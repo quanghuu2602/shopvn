@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — ShopVN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+@* NAVBAR *@
+<header class="navbar">
+    <div class="navbar-inner">
+        <a class="logo" asp-controller="Home" asp-action="Index">Shop<em>VN</em></a>
+
+        <nav class="nav-links">
+            <a asp-controller="Home" asp-action="Index" class="nav-link">Trang chủ</a>
+            <a asp-controller="Product" asp-action="Index" class="nav-link">Sản phẩm</a>
+        </nav>
+
+        <div class="nav-search">
+            <form asp-controller="Product" asp-action="Index" method="get">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" name="search" placeholder="Tìm sản phẩm..." value="@ViewData["Search"]" />
+            </form>
+        </div>
+
+        <div class="nav-actions">
+            @if (User.Identity!.IsAuthenticated)
+            {
+                <a asp-controller="Cart" asp-action="Index" class="nav-icon-btn cart-btn">
+                    <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    @if (ViewBag.CartCount != null && ViewBag.CartCount > 0)
+                    {
+                        <span class="cart-badge">@ViewBag.CartCount</span>
+                    }
+                </a>
+                <div class="nav-user-menu">
+                    <button class="nav-icon-btn user-btn">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span>@User.Identity.Name?.Split('@')[0]</span>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a asp-controller="Account" asp-action="Profile">Tài khoản</a>
+                        <a asp-controller="Order" asp-action="MyOrders">Đơn hàng</a>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-controller="Admin" asp-action="Index" class="admin-link">Admin Panel</a>
+                        }
+                        <div class="dropdown-divider"></div>
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit">Đăng xuất</button>
+                        </form>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn-outline">Đăng nhập</a>
+                <a asp-controller="Account" asp-action="Register" class="btn-primary">Đăng ký</a>
+            }
+        </div>
+    </div>
+</header>
+
+@* TOAST NOTIFICATION *@
+@if (TempData["Success"] != null)
+{
+    <div class="toast toast-success" id="toast">
+        <span>✓</span> @TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="toast toast-error" id="toast">
+        <span>✕</span> @TempData["Error"]
+    </div>
+}
+
+<main>
+    @RenderBody()
+</main>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-logo">Shop<em>VN</em></div>
+        <p>© 2025 ShopVN — Mua sắm thông minh hơn mỗi ngày</p>
+    </div>
+</footer>
+
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

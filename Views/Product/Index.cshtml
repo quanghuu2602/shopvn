@@ -1,0 +1,88 @@
+﻿@model List<SHOPVN.Models.Product>
+@{
+    ViewData["Title"] = "Sản phẩm";
+}
+
+<div class="page">
+
+    <div class="section-hd">
+        <h2>Tất cả sản phẩm</h2>
+        <span style="font-size:14px;color:var(--ink3)">@Model.Count sản phẩm</span>
+    </div>
+
+    @* FILTER THEO DANH MỤC *@
+    <div class="filter-bar">
+        <a asp-action="Index" class="filter-pill @(ViewBag.SelectedCategory == null ? "active" : "")">
+            Tất cả
+        </a>
+        @foreach (var cat in ViewBag.Categories)
+        {
+            <a asp-action="Index" asp-route-categoryId="@cat.Id"
+               class="filter-pill @(ViewBag.SelectedCategory == cat.Id ? "active" : "")">
+                @cat.Icon @cat.Name
+            </a>
+        }
+    </div>
+
+    @* DANH SÁCH SẢN PHẨM *@
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>Không tìm thấy sản phẩm</h3>
+            <p>Thử tìm kiếm với từ khóa khác nhé</p>
+            <a asp-action="Index" class="btn-primary">Xem tất cả</a>
+        </div>
+    }
+    else
+    {
+        <div class="products-grid">
+            @foreach (var p in Model)
+            {
+                <div class="product-card">
+                    <a asp-action="Detail" asp-route-id="@p.Id">
+                        <div class="pc-img">
+                            @if (!string.IsNullOrEmpty(p.Badge))
+                            {
+                                <span class="pc-badge @p.Badge">
+                                    @(p.Badge == "new" ? "Mới" : p.Badge == "hot" ? "🔥 Hot" : "Sale")
+                                </span>
+                            }
+                            @p.ImageEmoji
+                        </div>
+                        <div class="pc-info">
+                            <div class="pc-brand">@p.Brand</div>
+                            <div class="pc-name">@p.Name</div>
+                            <div class="pc-footer">
+                                <div>
+                                    <span class="pc-price">@p.Price.ToString("N0")đ</span>
+                                    @if (p.OriginalPrice.HasValue)
+                                    {
+                                        <span class="pc-old">@p.OriginalPrice.Value.ToString("N0")đ</span>
+                                    }
+                                </div>
+                                @* Nút thêm giỏ hàng — chỉ hiện nếu đã đăng nhập *@
+                                @if (User.Identity!.IsAuthenticated)
+                                {
+                                    <button class="pc-add btn-add-cart"
+                                            data-id="@p.Id"
+                                            onclick="event.preventDefault()">
+                                        <svg viewBox="0 0 24 24">
+                                            <line x1="12" y1="5" x2="12" y2="19"/>
+                                            <line x1="5" y1="12" x2="19" y2="12"/>
+                                        </svg>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+}
