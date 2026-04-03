@@ -12,7 +12,7 @@ using SHOPVN.Data;
 namespace SHOPVN.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260330154527_InitialCreate")]
+    [Migration("20260403111059_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -245,8 +245,11 @@ namespace SHOPVN.Migrations
 
             modelBuilder.Entity("SHOPVN.Models.CartItem", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
@@ -254,18 +257,14 @@ namespace SHOPVN.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId1")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("UserId1");
+                    b.HasIndex("UserId");
 
                     b.ToTable("CartItems");
                 });
@@ -475,7 +474,7 @@ namespace SHOPVN.Migrations
                             Badge = "sale",
                             Brand = "Nike",
                             CategoryId = 1,
-                            CreatedAt = new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3336),
+                            CreatedAt = new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8501),
                             Description = "Giày thể thao cao cấp",
                             FlashSaleSold = 0,
                             FlashSaleTotal = 100,
@@ -493,8 +492,8 @@ namespace SHOPVN.Migrations
                             Badge = "sale",
                             Brand = "Sony",
                             CategoryId = 4,
-                            CreatedAt = new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3360),
-                            Description = "Tai nghe chống ồn đỉnh cao",
+                            CreatedAt = new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8514),
+                            Description = "Tai nghe chống ồn",
                             FlashSaleSold = 0,
                             FlashSaleTotal = 100,
                             ImageEmoji = "🎧",
@@ -511,8 +510,8 @@ namespace SHOPVN.Migrations
                             Badge = "hot",
                             Brand = "Apple",
                             CategoryId = 2,
-                            CreatedAt = new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3368),
-                            Description = "Flagship của Apple 2024",
+                            CreatedAt = new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8517),
+                            Description = "Flagship Apple 2024",
                             FlashSaleSold = 73,
                             FlashSaleTotal = 100,
                             ImageEmoji = "📱",
@@ -528,7 +527,7 @@ namespace SHOPVN.Migrations
                             Badge = "new",
                             Brand = "Casio",
                             CategoryId = 3,
-                            CreatedAt = new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3374),
+                            CreatedAt = new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8521),
                             Description = "Đồng hồ thể thao bền bỉ",
                             FlashSaleSold = 0,
                             FlashSaleTotal = 100,
@@ -545,7 +544,7 @@ namespace SHOPVN.Migrations
                             Badge = "sale",
                             Brand = "Dell",
                             CategoryId = 2,
-                            CreatedAt = new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3378),
+                            CreatedAt = new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8523),
                             Description = "Laptop mỏng nhẹ cao cấp",
                             FlashSaleSold = 0,
                             FlashSaleTotal = 100,
@@ -563,7 +562,7 @@ namespace SHOPVN.Migrations
                             Badge = "sale",
                             Brand = "Keychron",
                             CategoryId = 2,
-                            CreatedAt = new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3383),
+                            CreatedAt = new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8526),
                             Description = "Bàn phím cơ không dây",
                             FlashSaleSold = 89,
                             FlashSaleTotal = 100,
@@ -638,7 +637,7 @@ namespace SHOPVN.Migrations
 
                     b.HasOne("SHOPVN.Models.ApplicationUser", "User")
                         .WithMany("CartItems")
-                        .HasForeignKey("UserId1")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

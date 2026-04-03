@@ -1,13 +1,16 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SHOPVN.Data;
 using SHOPVN.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Database
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    opt.UseSqlServer(builder.Configuration
+        .GetConnectionString("DefaultConnection")));
 
+// Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(opt => {
     opt.Password.RequireDigit = false;
     opt.Password.RequireLowercase = false;
@@ -19,13 +22,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(opt => {
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
+// Cookie login
 builder.Services.ConfigureApplicationCookie(opt => {
     opt.LoginPath = "/Account/Login";
     opt.LogoutPath = "/Account/Logout";
-    opt.AccessDeniedPath = "/Account/AccessDenied";
-    opt.Cookie.HttpOnly = true;
     opt.ExpireTimeSpan = TimeSpan.FromDays(7);
-    opt.SlidingExpiration = true;
+});
+
+// Antiforgery đọc token từ header AJAX
+builder.Services.AddAntiforgery(opt => {
+    opt.HeaderName = "RequestVerificationToken";
 });
 
 builder.Services.AddControllersWithViews();
@@ -33,16 +39,17 @@ builder.Services.AddSession();
 
 var app = builder.Build();
 
-// Seed admin user
+// Seed roles + admin
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = scope.ServiceProvider
+        .GetRequiredService<RoleManager<IdentityRole<int>>>();
+    var userManager = scope.ServiceProvider
+        .GetRequiredService<UserManager<ApplicationUser>>();
 
-    if (!await roleManager.RoleExistsAsync("Admin"))
-        await roleManager.CreateAsync(new IdentityRole<int>("Admin"));
-    if (!await roleManager.RoleExistsAsync("Customer"))
-        await roleManager.CreateAsync(new IdentityRole<int>("Customer"));
+    foreach (var role in new[] { "Admin", "Customer" })
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole<int>(role));
 
     if (await userManager.FindByEmailAsync("admin@shopvn.com") == null)
     {
@@ -59,12 +66,13 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/Home/Error");
+if (!app.Environment.IsDevelopment())
+    app.UseExceptionHandler("/Home/Error");
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 app.Run();

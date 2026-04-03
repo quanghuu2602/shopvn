@@ -7,153 +7,127 @@ using SHOPVN.Models;
 
 namespace SHOPVN.Controllers
 {
-    [Authorize] // Phải đăng nhập mới dùng được giỏ hàng
     public class CartController : Controller
     {
         private readonly AppDbContext _db;
+        public CartController(AppDbContext db) { _db = db; }
 
-        public CartController(AppDbContext db)
-        {
-            _db = db;
-        }
+        private int GetUserId() =>
+            int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        // Lấy userId từ cookie đăng nhập
-        private int GetUserId()
-        {
-            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        }
-
-        // GET: /Cart — xem giỏ hàng
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             var userId = GetUserId();
-
-            // Lấy tất cả item trong giỏ của user này, kèm thông tin sản phẩm
-            var cartItems = await _db.CartItems
+            var items = await _db.CartItems
                 .Include(c => c.Product)
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
-
-            // Tính tổng tiền
-            var total = cartItems.Sum(c => c.Product.Price * c.Quantity);
-            ViewBag.Total = total;
-
-            return View(cartItems);
+            ViewBag.Total = items.Sum(c => c.Product.Price * c.Quantity);
+            return View(items);
         }
 
-        // POST: /Cart/Add — thêm sản phẩm vào giỏ (AJAX)
+        // KHÔNG [Authorize] KHÔNG [ValidateAntiForgeryToken]
+        // Tự kiểm tra đăng nhập bên trong
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add([FromBody] AddToCartDto dto)
         {
-            var userId = GetUserId();
-
-            // Kiểm tra sản phẩm có tồn tại không
-            var product = await _db.Products.FindAsync(dto.ProductId);
-            if (product == null)
-                return Json(new { success = false, message = "Sản phẩm không tồn tại" });
-
-            // Kiểm tra còn hàng không
-            if (product.Stock < dto.Quantity)
-                return Json(new { success = false, message = "Không đủ hàng" });
-
-            // Kiểm tra sản phẩm đã có trong giỏ chưa
-            var existingItem = await _db.CartItems
-                .FirstOrDefaultAsync(c => c.UserId == userId && c.ProductId == dto.ProductId);
-
-            if (existingItem != null)
+            try
             {
-                // Đã có rồi thì tăng số lượng
-                existingItem.Quantity += dto.Quantity;
+                if (!User.Identity!.IsAuthenticated)
+                    return Json(new { success = false, message = "Vui lòng đăng nhập" });
+
+                var userId = GetUserId();
+
+                var product = await _db.Products.FindAsync(dto.ProductId);
+                if (product == null)
+                    return Json(new { success = false, message = "Không tìm thấy SP id=" + dto.ProductId });
+
+                if (product.Stock < dto.Quantity)
+                    return Json(new { success = false, message = "Hết hàng" });
+
+                var existing = await _db.CartItems
+                    .FirstOrDefaultAsync(c => c.UserId == userId
+                                           && c.ProductId == dto.ProductId);
+                if (existing != null)
+                    existing.Quantity += dto.Quantity;
+                else
+                    _db.CartItems.Add(new CartItem
+                    {
+                        UserId = userId,
+                        ProductId = dto.ProductId,
+                        Quantity = dto.Quantity
+                    });
+
+                await _db.SaveChangesAsync();
+
+                var count = await _db.CartItems
+                    .Where(c => c.UserId == userId)
+                    .SumAsync(c => c.Quantity);
+
+                return Json(new { success = true, count });
             }
-            else
+            catch (Exception ex)
             {
-                // Chưa có thì thêm mới
-                var cartItem = new CartItem
-                {
-                    UserId = userId,
-                    ProductId = dto.ProductId,
-                    Quantity = dto.Quantity
-                };
-                _db.CartItems.Add(cartItem);
+                // Hiện lỗi chi tiết
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
-
-            await _db.SaveChangesAsync();
-
-            // Đếm tổng số item trong giỏ để cập nhật badge
-            var count = await _db.CartItems
-                .Where(c => c.UserId == userId)
-                .SumAsync(c => c.Quantity);
-
-            return Json(new { success = true, count });
         }
 
-        // POST: /Cart/UpdateQty — cập nhật số lượng (AJAX)
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateQty([FromBody] UpdateQtyDto dto)
         {
-            var userId = GetUserId();
+            if (!User.Identity!.IsAuthenticated)
+                return Json(new { success = false });
 
+            var userId = GetUserId();
             var item = await _db.CartItems
                 .Include(c => c.Product)
-                .FirstOrDefaultAsync(c => c.Id == dto.CartItemId && c.UserId == userId);
-
+                .FirstOrDefaultAsync(c => c.Id == dto.CartItemId
+                                       && c.UserId == userId);
             if (item == null)
                 return Json(new { success = false });
 
-            // Tăng hoặc giảm số lượng
-            if (dto.Action == "increase")
-                item.Quantity++;
-            else if (dto.Action == "decrease")
-                item.Quantity--;
+            if (dto.Action == "increase") item.Quantity++;
+            else if (dto.Action == "decrease") item.Quantity--;
 
-            // Nếu số lượng về 0 thì xóa khỏi giỏ
             if (item.Quantity <= 0)
                 _db.CartItems.Remove(item);
 
             await _db.SaveChangesAsync();
 
-            // Tính lại tổng
             var allItems = await _db.CartItems
                 .Include(c => c.Product)
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
 
-            var total = allItems.Sum(c => c.Product.Price * c.Quantity);
-            var count = allItems.Sum(c => c.Quantity);
-
             return Json(new
             {
                 success = true,
                 newQty = item.Quantity,
-                total,
-                count
+                total = allItems.Sum(c => c.Product.Price * c.Quantity),
+                count = allItems.Sum(c => c.Quantity)
             });
         }
 
-        // POST: /Cart/Remove — xóa 1 sản phẩm khỏi giỏ
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Remove(int id)
         {
             var userId = GetUserId();
-
             var item = await _db.CartItems
                 .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
-
             if (item != null)
             {
                 _db.CartItems.Remove(item);
                 await _db.SaveChangesAsync();
-                TempData["Success"] = "Đã xóa sản phẩm khỏi giỏ hàng";
             }
-
+            TempData["Success"] = "Đã xóa sản phẩm!";
             return RedirectToAction("Index");
         }
     }
 
-    // DTOs — nhận dữ liệu từ AJAX
     public class AddToCartDto
     {
         public int ProductId { get; set; }
@@ -163,6 +137,6 @@ namespace SHOPVN.Controllers
     public class UpdateQtyDto
     {
         public int CartItemId { get; set; }
-        public string Action { get; set; } = ""; // "increase" hoặc "decrease"
+        public string Action { get; set; } = "";
     }
 }

@@ -243,18 +243,18 @@ namespace SHOPVN.Migrations
                 name: "CartItems",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Quantity = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserId1 = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CartItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CartItems_AspNetUsers_UserId1",
-                        column: x => x.UserId1,
+                        name: "FK_CartItems_AspNetUsers_UserId",
+                        column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -312,12 +312,12 @@ namespace SHOPVN.Migrations
                 columns: new[] { "Id", "Badge", "Brand", "CategoryId", "CreatedAt", "Description", "FlashSaleSold", "FlashSaleTotal", "ImageEmoji", "IsActive", "IsFlashSale", "Name", "OriginalPrice", "Price", "Stock" },
                 values: new object[,]
                 {
-                    { 1, "sale", "Nike", 1, new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3336), "Giày thể thao cao cấp", 0, 100, "👟", true, false, "Nike Air Max 270", 1590000m, 1290000m, 50 },
-                    { 2, "sale", "Sony", 4, new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3360), "Tai nghe chống ồn đỉnh cao", 0, 100, "🎧", true, false, "Sony WH-1000XM5", 8990000m, 7490000m, 30 },
-                    { 3, "hot", "Apple", 2, new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3368), "Flagship của Apple 2024", 73, 100, "📱", true, true, "iPhone 15 Pro Max", null, 34990000m, 20 },
-                    { 4, "new", "Casio", 3, new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3374), "Đồng hồ thể thao bền bỉ", 0, 100, "⌚", true, false, "Casio G-Shock", null, 2150000m, 40 },
-                    { 5, "sale", "Dell", 2, new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3378), "Laptop mỏng nhẹ cao cấp", 0, 100, "💻", true, false, "Dell XPS 13 Plus", 32000000m, 28500000m, 15 },
-                    { 6, "sale", "Keychron", 2, new DateTime(2026, 3, 30, 15, 45, 24, 542, DateTimeKind.Utc).AddTicks(3383), "Bàn phím cơ không dây", 89, 100, "⌨️", true, true, "Keychron K2 Pro", 2490000m, 1890000m, 60 }
+                    { 1, "sale", "Nike", 1, new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8501), "Giày thể thao cao cấp", 0, 100, "👟", true, false, "Nike Air Max 270", 1590000m, 1290000m, 50 },
+                    { 2, "sale", "Sony", 4, new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8514), "Tai nghe chống ồn", 0, 100, "🎧", true, false, "Sony WH-1000XM5", 8990000m, 7490000m, 30 },
+                    { 3, "hot", "Apple", 2, new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8517), "Flagship Apple 2024", 73, 100, "📱", true, true, "iPhone 15 Pro Max", null, 34990000m, 20 },
+                    { 4, "new", "Casio", 3, new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8521), "Đồng hồ thể thao bền bỉ", 0, 100, "⌚", true, false, "Casio G-Shock", null, 2150000m, 40 },
+                    { 5, "sale", "Dell", 2, new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8523), "Laptop mỏng nhẹ cao cấp", 0, 100, "💻", true, false, "Dell XPS 13 Plus", 32000000m, 28500000m, 15 },
+                    { 6, "sale", "Keychron", 2, new DateTime(2026, 4, 3, 11, 10, 58, 972, DateTimeKind.Utc).AddTicks(8526), "Bàn phím cơ không dây", 89, 100, "⌨️", true, true, "Keychron K2 Pro", 2490000m, 1890000m, 60 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -365,9 +365,9 @@ namespace SHOPVN.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CartItems_UserId1",
+                name: "IX_CartItems_UserId",
                 table: "CartItems",
-                column: "UserId1");
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId",

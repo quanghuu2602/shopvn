@@ -4,8 +4,7 @@
 }
 
 <div class="page">
-
-    @if (Model.Count == 0)
+    @if (!Model.Any())
     {
         <div class="empty-state">
             <div class="empty-icon">🛒</div>
@@ -19,85 +18,131 @@
     else
     {
         <div class="cart-layout">
-
-            @* DANH SÁCH SẢN PHẨM *@
             <div>
-                <div style="display:flex;justify-content:space-between;
-                            align-items:center;margin-bottom:20px">
-                    <h2 style="font-family:var(--font-display);font-size:26px">
-                        Giỏ hàng (@Model.Count sản phẩm)
-                    </h2>
-                </div>
+                <h2 style="margin-bottom:20px">
+                    Giỏ hàng (@Model.Count sản phẩm)
+                </h2>
 
                 @foreach (var item in Model)
                 {
-                    <div class="cart-item">
+                    <div class="cart-item" id="cart-row-@item.Id">
                         <div class="ci-thumb">@item.Product.ImageEmoji</div>
+
                         <div class="ci-body">
                             <div class="ci-brand">@item.Product.Brand</div>
                             <div class="ci-name">@item.Product.Name</div>
 
-                            @* Nút tăng giảm số lượng *@
+                            <!-- qty -->
                             <div class="qty-control">
-                                <button class="qty-btn"
+                                <button type="button"
+                                        class="qty-btn"
                                         data-id="@item.Id"
-                                        data-action="decrease">−</button>
-                                <span class="qty-val">@item.Quantity</span>
-                                <button class="qty-btn"
+                                        data-action="decrease">
+                                    −
+                                </button>
+
+                                <span id="qty-@item.Id">@item.Quantity</span>
+
+                                <button type="button"
+                                        class="qty-btn"
                                         data-id="@item.Id"
-                                        data-action="increase">+</button>
+                                        data-action="increase">
+                                    +
+                                </button>
                             </div>
                         </div>
 
                         <div style="text-align:right">
-                            <div class="ci-price">
+                            <div id="price-@item.Id">
                                 @((item.Product.Price * item.Quantity).ToString("N0"))đ
                             </div>
-                            @* Nút xóa *@
-                            <form asp-action="Remove" method="post" style="margin-top:8px">
+
+                            <!-- remove -->
+                            <form asp-action="Remove" method="post">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@item.Id" />
-                                <button type="submit" class="ci-remove">Xóa</button>
+                                <button type="submit">Xóa</button>
                             </form>
                         </div>
                     </div>
                 }
             </div>
 
-            @* TỔNG KẾT ĐƠN HÀNG *@
+            <!-- summary -->
             <div class="order-summary">
-                <div class="os-title">Tóm tắt đơn hàng</div>
-
-                <div class="os-row">
-                    <span>Tạm tính</span>
+                <div>
+                    Tạm tính:
                     <span id="cart-total">@ViewBag.Total.ToString("N0")đ</span>
                 </div>
-                <div class="os-row">
-                    <span>Phí vận chuyển</span>
-                    <span style="color:var(--accent)">Miễn phí</span>
-                </div>
-                <div class="os-total">
-                    <span>Tổng cộng</span>
-                    <span class="os-total-val">@ViewBag.Total.ToString("N0")đ</span>
+
+                <div>
+                    Tổng:
+                    <span id="cart-total-main">@ViewBag.Total.ToString("N0")đ</span>
                 </div>
 
-                <a asp-controller="Order" asp-action="Checkout"
-                   class="btn-full" style="display:block;text-align:center;margin-top:16px">
-                    Thanh toán ngay →
-                </a>
-
-                <a asp-controller="Product" asp-action="Index"
-                   style="display:block;text-align:center;font-size:13px;
-                          color:var(--ink3);margin-top:12px">
-                    ← Tiếp tục mua sắm
+                <a asp-controller="Order" asp-action="Checkout" class="btn-full">
+                    Thanh toán
                 </a>
             </div>
-
         </div>
     }
-
 </div>
 
 @section Scripts {
     @Html.AntiForgeryToken()
+
+    <script>
+        function getToken() {
+            return document.querySelector('[name="__RequestVerificationToken"]').value;
+        }
+
+        function formatMoney(n) {
+            return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+        }
+
+        document.querySelectorAll('.qty-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+
+                const id = parseInt(this.dataset.id);
+                const action = this.dataset.action;
+
+                fetch('/Cart/UpdateQty', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': getToken()
+                    },
+                    body: JSON.stringify({
+                        cartItemId: id,
+                        action: action
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    console.log(data);
+
+                    if (!data.success) return;
+
+                    // xóa nếu <=0
+                    if (data.newQty <= 0) {
+                        document.getElementById('cart-row-' + id)?.remove();
+                        if (data.count === 0) location.reload();
+                        return;
+                    }
+
+                    // update qty
+                    document.getElementById('qty-' + id).textContent = data.newQty;
+
+                    // update tổng
+                    document.getElementById('cart-total').textContent = formatMoney(data.total);
+                    document.getElementById('cart-total-main').textContent = formatMoney(data.total);
+
+                    // update badge
+                    const badge = document.querySelector('.cart-badge');
+                    if (badge) badge.textContent = data.count;
+                })
+                .catch(err => console.error(err));
+            });
+        });
+    </script>
 }
